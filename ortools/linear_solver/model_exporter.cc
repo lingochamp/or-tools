@@ -246,9 +246,9 @@ std::vector<std::string> MPModelProtoExporter::ExtractAndProcessNames(
   for (const auto& item : proto) {
     const std::string obfuscated_name =
         absl::StrFormat("%s%0*d", prefix, num_digits, i);
-    if (obfuscate || !item.name().length() > 0) {
+    if (obfuscate || item.name().length() > 0) {
       result[i] = namer.MakeUniqueName(obfuscated_name);
-      LOG_IF(WARNING, log_invalid_names && !item.name().length() > 0)
+      LOG_IF(WARNING, log_invalid_names && item.name().length() > 0)
           << "Empty name detected, created new name: " << result[i];
     } else {
       bool found_forbidden_char = false;
