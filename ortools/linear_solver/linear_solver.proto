@@ -1,17 +1,6 @@
-// Copyright 2010-2018 Google LLC
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-// Linear Programming Protocol Buffers.
+// Linear Programming Protocol Buffers. This is a copy from
+// https://github.com/google/or-tools/blob/stable/ortools/linear_solver/linear_solver.proto
+// with a little adaptation for lls.
 //
 // The protocol buffers below make it possible to store and transfer the
 // representation of Linear and Mixed-Integer Programs.
@@ -26,13 +15,11 @@
 // Check ./linear_solver.h and Wikipedia for more detail:
 //   http://en.wikipedia.org/wiki/Linear_programming
 //
-
-syntax = "proto2";
+syntax = "proto3";
 
 option java_package = "com.google.ortools.linearsolver";
 option java_multiple_files = true;
 
-// import "google/protobuf/wrappers.proto";
 import "ortools/util/optional_boolean.proto";
 
 package operations_research;
@@ -50,22 +37,24 @@ package operations_research;
 // MPVariableProto furthermore stores:
 //  - The coefficient of the variable in the objective.
 //  - Whether the variable is integer.
+//
+// Next ID: 7
 message MPVariableProto {
   // lower_bound must be <= upper_bound.
-  optional double lower_bound = 1 [default = -inf];
-  optional double upper_bound = 2 [default = inf];
+  double lower_bound = 1;
+  double upper_bound = 2;
 
   // The coefficient of the variable in the objective. Must be finite.
-  optional double objective_coefficient = 3 [default = 0.0];
+  double objective_coefficient = 3;
 
   // True if the variable is constrained to be integer.
   // Ignored if MPModelProto::solver_type is *LINEAR_PROGRAMMING*.
-  optional bool is_integer = 4 [default = false];
+  bool is_integer = 4;
 
   // The name of the variable.
-  optional string name = 5 [default = ""];
+  string name = 5;
 
-  optional int32 branching_priority = 6 [default = 0];
+  int32 branching_priority = 6;
 }
 
 // A linear constraint is always of the form:
@@ -79,32 +68,38 @@ message MPVariableProto {
 //   is upper-bounded. upper_bound = +infinity: the constraint is lower-bounded.
 // - Can form the infinite interval: lower_bound = -infinity and
 //   upper_bound = +infinity. The constraint is free.
+//
+// Next ID: 8
 message MPConstraintProto {
   // var_index[i] is the variable index (w.r.t. to "variable" field of
   // MPModelProto) of the i-th linear term involved in this constraint, and
   // coefficient[i] is its coefficient. Only the terms with non-zero
   // coefficients need to appear. var_index may not contain duplicates.
-  repeated int32 var_index = 6 [packed = true];
-  repeated double coefficient = 7 [packed = true];  // Must be finite.
+  repeated int32 var_index = 6;
+  repeated double coefficient = 7;  // Must be finite.
 
   // lower_bound must be <= upper_bound.
-  optional double lower_bound = 2 [default = -inf];
-  optional double upper_bound = 3 [default = inf];
+  double lower_bound = 2;
+  double upper_bound = 3;
 
   // The name of the constraint.
-  optional string name = 4 [default = ""];
+  string name = 4;
 
   // [Advanced usage: do not use this if you don't know what you're doing.]
   // A lazy constraint is handled differently by the core solving engine, but
   // it does not change the result. It may or may not impact the performance.
   // For more info see: http://tinyurl.com/lazy-constraints.
-  optional bool is_lazy = 5 [default = false];
+  bool is_lazy = 5;
+
+  reserved 1;
 }
 
 // General constraints. See each individual proto type for more information.
+//
+// Next ID: 5
 message MPGeneralConstraintProto {
   // The name of the constraint.
-  optional string name = 1 [default = ""];
+  string name = 1;
 
   oneof general_constraint {
     MPIndicatorConstraint indicator_constraint = 2;
@@ -120,21 +115,25 @@ message MPGeneralConstraintProto {
 // The 2 * x1 + 3 * x2 >= 42 constraint is only active if the variable y is
 // equal to 0.
 // As of 2019/04, only SCIP, CP-SAT and Gurobi support this constraint type.
+//
+// Next ID: 4
 message MPIndicatorConstraint {
   // Variable index (w.r.t. the "variable" field of MPModelProto) of the Boolean
   // variable used as indicator.
-  optional int32 var_index = 1;
+  int32 var_index = 1;
 
   // Value the above variable should take. Must be 0 or 1.
-  optional int32 var_value = 2;
+  int32 var_value = 2;
 
   // The constraint activated by the indicator variable.
-  optional MPConstraintProto constraint = 3;
+  MPConstraintProto constraint = 3;
 }
 
 // Special Ordered Set (SOS) constraints of type 1 or 2.
 // See https://en.wikipedia.org/wiki/Special_ordered_set
 // As of 2019/04, only SCIP and Gurobi support this constraint type.
+//
+// Next ID: 4
 message MPSosConstraint {
   enum Type {
     // At most one variable in `var_index` must be non-zero.
@@ -144,7 +143,7 @@ message MPSosConstraint {
     // http://www.eudoxus.com/lp-training/5/5-6-special-ordered-sets-of-type-2
     SOS2 = 1;
   }
-  optional Type type = 1 [default = SOS1_DEFAULT];
+  Type type = 1;
 
   // Variable index (w.r.t. the "variable" field of MPModelProto) of the
   // variables in the SOS.
@@ -170,6 +169,8 @@ message MPSosConstraint {
 // accepted depending on the underlying solver used.
 // See https://scip.zib.de/doc/html/cons__quadratic_8h.php and
 // https://www.gurobi.com/documentation/8.1/refman/constraints.html#subsubsection:QuadraticConstraints
+//
+// Next ID: 8
 message MPQuadraticConstraint {
   // Sparse representation of linear terms in the quadratic constraint, where
   // term i is var_index[i] * coefficient[i].
@@ -190,8 +191,8 @@ message MPQuadraticConstraint {
   repeated double qcoefficient = 5;  // Must be finite.
 
   // lower_bound must be <= upper_bound.
-  optional double lower_bound = 6 [default = -inf];
-  optional double upper_bound = 7 [default = inf];
+  double lower_bound = 6;
+  double upper_bound = 7;
 }
 
 // Quadratic part of a model's objective. Added with other objectives (such as
@@ -199,6 +200,8 @@ message MPQuadraticConstraint {
 // Note: the linear part of the objective currently needs to be specified in the
 // MPVariableProto.objective_coefficient fields. If you'd rather have a
 // dedicated linear array here, talk to or-core-team@
+//
+// Next ID: 4
 message MPQuadraticObjective {
   // Sparse representation of quadratic terms in the objective function, where
   // term i is qvar1_index[i] * qvar2_index[i] * coefficient[i].
@@ -216,11 +219,13 @@ message MPQuadraticObjective {
 // MPModelProto problem. The indices in var_index should be unique and valid
 // variable indices of the associated problem.
 message PartialVariableAssignment {
-  repeated int32 var_index = 1 [packed = true];
-  repeated double var_value = 2 [packed = true];
+  repeated int32 var_index = 1;
+  repeated double var_value = 2;
 }
 
 // MPModelProto contains all the information for a Linear Programming model.
+//
+// Next ID: 9
 message MPModelProto {
   // All the variables appearing in the model.
   repeated MPVariableProto variable = 3;
@@ -233,17 +238,17 @@ message MPModelProto {
   repeated MPGeneralConstraintProto general_constraint = 7;
 
   // True if the problem is a maximization problem. Minimize by default.
-  optional bool maximize = 1 [default = false];
+  bool maximize = 1;
 
   // Offset for the objective function. Must be finite.
-  optional double objective_offset = 2 [default = 0.0];
+  double objective_offset = 2;
 
   // Optionally, a quadratic objective.
   // As of 2019/06, only SCIP and Gurobi support quadratic objectives.
-  optional MPQuadraticObjective quadratic_objective = 8;
+  MPQuadraticObjective quadratic_objective = 8;
 
   // Name of the model.
-  optional string name = 5 [default = ""];
+  string name = 5;
 
   // Solution hint.
   //
@@ -256,7 +261,7 @@ message MPModelProto {
   // solver. There is also no guarantee that the solver will use this hint or
   // try to return a solution "close" to this assignment in case of multiple
   // optimal solutions.
-  optional PartialVariableAssignment solution_hint = 6;
+  PartialVariableAssignment solution_hint = 6;
 }
 
 // To support 'unspecified' double value in proto3, the simplest is to wrap
@@ -265,7 +270,7 @@ message MPModelProto {
 // the following android integration test fail:
 // http://sponge/c4bce1fd-41bd-4d0b-b4ca-fc04d4d64621
 message OptionalDouble {
-  optional double value = 1;
+  double value = 1;
 }
 
 // MPSolverCommonParameters holds advanced usage parameters that apply to any of
@@ -274,6 +279,8 @@ message OptionalDouble {
 // case each inner solver will use their own safe defaults.
 // Some values won't be supported by some solvers. The behavior in that case is
 // not defined yet.
+//
+// Next ID: 8
 message MPSolverCommonParameters {
   // Limit for relative MIP gap.
   // If the relative MIP gap reaches this value or below, stop the solve before
@@ -289,20 +296,20 @@ message MPSolverCommonParameters {
   // The MIP Gap is sensitive to objective offset.
   // If the denominator is 0 the MIP Gap is INFINITY for SCIP and Gurobi.
   // Ask or-core-team@ for other solvers.
-  optional OptionalDouble relative_mip_gap = 1;
+  OptionalDouble relative_mip_gap = 1;
 
   // Tolerance for primal feasibility of basic solutions: this is the maximum
   // allowed error in constraint satisfiability.
   // For SCIP this includes integrality constraints. For Gurobi it does not, you
   // need to set the custom parameter IntFeasTol.
-  optional OptionalDouble primal_tolerance = 2;
+  OptionalDouble primal_tolerance = 2;
 
   // Tolerance for dual feasibility.
   // For SCIP and Gurobi this is the feasibility tolerance for reduced costs in
   // LP solution: reduced costs must all be smaller than this value in the
   // improving direction in order for a model to be declared optimal.
   // Not supported for other solvers.
-  optional OptionalDouble dual_tolerance = 3;
+  OptionalDouble dual_tolerance = 3;
 
   enum LPAlgorithmValues {
     LP_ALGO_UNSPECIFIED = 0;
@@ -313,22 +320,26 @@ message MPSolverCommonParameters {
 
   // Algorithm to solve linear programs.
   // Ask or-core-team@ if you want to know what this does exactly.
-  optional LPAlgorithmValues lp_algorithm = 4 [default = LP_ALGO_UNSPECIFIED];
+  LPAlgorithmValues lp_algorithm = 4;
 
   // Gurobi and SCIP enable presolve by default.
   // Ask or-core-team@ for other solvers.
-  optional OptionalBoolean presolve = 5 [default = BOOL_UNSPECIFIED];
+  OptionalBoolean presolve = 5;
 
   // Enable automatic scaling of matrix coefficients and objective. Available
   // for Gurobi and GLOP.
   // Ask or-core-team@ if you want more details.
-  optional OptionalBoolean scaling = 7 [default = BOOL_UNSPECIFIED];
+  OptionalBoolean scaling = 7;
+
+  reserved 6;
 }
 
 // Encodes a full MPModelProto by way of referencing to a "baseline"
 // MPModelProto stored in a file, and a "delta" to apply to this model.
+//
+// Next ID: 4
 message MPModelDeltaProto {
-  optional /*required*/ string baseline_model_file_path = 1;
+  string baseline_model_file_path = 1;
 
   // The variable protos listed here will override (via MergeFrom()) the ones
   // in the baseline model: you only need to specify the fields that change.
@@ -351,10 +362,10 @@ message MPModelDeltaProto {
   // NOTE(user): We may also add more deltas, eg. objective offset.
 }
 
-// Next id: 9.
+// Next ID: 6
 message MPModelRequest {
   // The model to be optimized by the server.
-  optional MPModelProto model = 1;
+  MPModelProto model = 1;
 
   // The solver type, which will select a specific implementation, and will also
   // impact the interpretation of the model (i.e. are we solving the problem
@@ -362,8 +373,8 @@ message MPModelRequest {
   // program?).
   // This must remain consistent with MPSolver::OptimizationProblemType.
   enum SolverType {
-    GLOP_LINEAR_PROGRAMMING = 2;  // Recommended default for LP models.
     CLP_LINEAR_PROGRAMMING = 0;
+    GLOP_LINEAR_PROGRAMMING = 2;  // Recommended default for LP models.
     GLPK_LINEAR_PROGRAMMING = 1;
     GUROBI_LINEAR_PROGRAMMING = 6;  // Commercial, needs a valid license.
     CPLEX_LINEAR_PROGRAMMING = 10;  // Commercial, needs a valid
@@ -385,7 +396,7 @@ message MPModelRequest {
 
     KNAPSACK_MIXED_INTEGER_PROGRAMMING = 13;
   }
-  optional SolverType solver_type = 2;
+  SolverType solver_type = 2;
 
   // Maximum time to be spent by the solver to solve 'model'. If the server is
   // busy and the RPC's deadline_left is less than this, it will immediately
@@ -396,13 +407,13 @@ message MPModelRequest {
   // an optimal solution more quickly).
   //
   // If not specified, the time limit on the solver is the RPC's deadline_left.
-  optional double solver_time_limit_seconds = 3;
+  double solver_time_limit_seconds = 3;
 
   // If this is set, then EnableOutput() will be set on the internal MPSolver
   // that solves the model.
   // WARNING: if you set this on a request to prod servers, it will be rejected
   // and yield the RPC Application Error code MPSOLVER_SOLVER_TYPE_UNAVAILABLE.
-  optional bool enable_internal_solver_output = 4 [default = false];
+  bool enable_internal_solver_output = 4;
 
   // Advanced usage. Solver-specific parameters in the solver's own format,
   // different for each solver. For example, if you use SCIP and you want to
@@ -416,8 +427,7 @@ message MPModelRequest {
   // If the option format is not understood by the solver, the request will be
   // rejected and yield an RPC Application error with code
   // MPSOLVER_MODEL_INVALID_SOLVER_PARAMETERS.
-  optional string solver_specific_parameters = 5;
-
+  string solver_specific_parameters = 5;
 }
 
 // Status returned by the solver. They follow a hierarchical nomenclature, to
@@ -497,33 +507,33 @@ enum MPSolverResponseStatus {
 
 }
 
+// Next ID: 8
 message MPSolutionResponse {
   // Result of the optimization.
-  optional /*required*/ MPSolverResponseStatus status = 1
-      [default = MPSOLVER_UNKNOWN_STATUS];
+  MPSolverResponseStatus status = 1;
 
   // Human-readable string giving more details about the status. For example,
   // when the status is MPSOLVER_INVALID_MODE, this can hold a description of
   // why the model is invalid.
   // This isn't always filled: don't depend on its value or even its presence.
-  optional string status_str = 7;
+  string status_str = 7;
 
   // Objective value corresponding to the "variable_value" below, taking into
   // account the source "objective_offset" and "objective_coefficient".
   // This is set iff 'status' is OPTIMAL or FEASIBLE.
-  optional double objective_value = 2;
+  double objective_value = 2;
 
   // This field is only filled for MIP problems. For a minimization problem,
   // this is a lower bound on the optimal objective value. For a maximization
   // problem, it is an upper bound. It is only filled if the status is OPTIMAL
   // or FEASIBLE. In the former case, best_objective_bound should be equal to
   // objective_value (modulo numerical errors).
-  optional double best_objective_bound = 5;
+  double best_objective_bound = 5;
 
   // Variable values in the same order as the MPModelProto::variable field.
   // This is a dense representation. These are set iff 'status' is OPTIMAL or
   // FEASIBLE.
-  repeated double variable_value = 3 [packed = true];
+  repeated double variable_value = 3;
 
   // [Advanced usage.]
   // Values of the dual variables values in the same order as the
@@ -531,7 +541,7 @@ message MPSolutionResponse {
   // These are not set if the problem was solved with a MIP solver (even if
   // it is actually a linear program).
   // These are set iff 'status' is OPTIMAL or FEASIBLE.
-  repeated double dual_value = 4 [packed = true];
+  repeated double dual_value = 4;
 
   // [Advanced usage.]
   // Values of the reduced cost of the variables in the same order as the
@@ -539,5 +549,5 @@ message MPSolutionResponse {
   // These are not set if the problem was solved with a MIP solver (even if it
   // is actually a linear program).
   // These are set iff 'status' is OPTIMAL or FEASIBLE.
-  repeated double reduced_cost = 6 [packed = true];
+  repeated double reduced_cost = 6;
 }

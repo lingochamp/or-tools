@@ -1,5 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@com_llsapp_git_common_bazel//build_rules/grpc/go:rules.bzl", "go_proto_library")
+load("@com_llsapp_git_common_bazel//build_rules/grpc/cpp:rules.bzl", "cc_proto_library")
+
 cc_library(
     name = "adaptative_parameter_value",
     hdrs = ["adaptative_parameter_value.h"],
@@ -229,7 +232,7 @@ cc_library(
         #        "//net/proto2/io/public:io",
         #        "//net/proto2/public",
         #        "//net/proto2/util/public:json",
-        "@com_google_protobuf_cc//:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -246,18 +249,23 @@ cc_library(
         #        "//net/proto2/io/public:io",
         #        "//net/proto2/public",
         #        "//net/proto2/util/public:json",
-        "@com_google_protobuf_cc//:protobuf",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
-proto_library(
+filegroup(
     name = "optional_boolean_proto",
     srcs = ["optional_boolean.proto"],
 )
 
 cc_proto_library(
     name = "optional_boolean_cc_proto",
-    deps = [":optional_boolean_proto"],
+    protos = [":optional_boolean_proto"],
+)
+
+go_proto_library(
+    name = "optional_boolean_go_proto",
+    protos = [":optional_boolean_proto"],
 )
 
 cc_library(

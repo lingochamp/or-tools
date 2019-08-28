@@ -686,7 +686,7 @@ MPSolverResponseStatus MPSolver::LoadModelFromProtoInternal(
   }
 
   objective->SetOptimizationDirection(input_model.maximize());
-  if (input_model.has_objective_offset()) {
+  if (input_model.objective_offset() > 0) {
     objective->SetOffset(input_model.objective_offset());
   }
 
@@ -777,7 +777,7 @@ void MPSolver::SolveWithProto(const MPModelRequest& model_request,
         << response->status() << "); Error: " << error_message;
     return;
   }
-  if (model_request.has_solver_time_limit_seconds()) {
+  if (model_request.solver_time_limit_seconds() > 0) {
     solver.SetTimeLimit(
         absl::Seconds(model_request.solver_time_limit_seconds()));
   }
@@ -930,7 +930,7 @@ util::Status MPSolver::LoadSolutionFromProto(const MPSolutionResponse& response,
   }
   // Set the objective value, if is known.
   // NOTE(user): We do not verify the objective, even though we could!
-  if (response.has_objective_value()) {
+  if (response.objective_value() > 0) {
     interface_->objective_value_ = response.objective_value();
   }
   // Mark the status as SOLUTION_SYNCHRONIZED, so that users may inspect the

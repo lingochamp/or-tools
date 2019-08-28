@@ -140,9 +140,6 @@ std::string CroppedConstraintDebugString(const MPConstraintProto& constraint) {
 std::string FindErrorInMPIndicatorConstraint(
     const MPModelProto& model, const MPIndicatorConstraint& indicator,
     std::vector<bool>* var_mask) {
-  if (!indicator.has_var_index()) {
-    return "var_index is required.";
-  }
   const int var_index = indicator.var_index();
   if (var_index < 0 || var_index >= model.variable_size()) {
     return absl::StrCat("var_index=", var_index, " is out of bounds.");
@@ -558,7 +555,7 @@ std::string FindErrorInMPModelDeltaProto(const MPModelDeltaProto& delta,
 void MergeMPConstraintProtoExceptTerms(const MPConstraintProto& from,
                                        MPConstraintProto* to) {
 #define COPY_FIELD_IF_PRESENT(field) \
-  if (from.has_##field()) to->set_##field(from.field())
+  to->set_##field(from.field())
   COPY_FIELD_IF_PRESENT(lower_bound);
   COPY_FIELD_IF_PRESENT(upper_bound);
   COPY_FIELD_IF_PRESENT(name);

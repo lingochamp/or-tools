@@ -1,5 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@com_llsapp_git_common_bazel//build_rules/grpc/go:rules.bzl", "go_proto_library")
+load("@com_llsapp_git_common_bazel//build_rules/grpc/cpp:rules.bzl", "cc_proto_library")
+
 config_setting(
     name = "with_glpk",
     values = {"define": "USE_GLPK="},
@@ -30,15 +33,21 @@ config_setting(
     values = {"define": "USE_GUROBI="},
 )
 
-proto_library(
+filegroup(
     name = "linear_solver_proto",
     srcs = ["linear_solver.proto"],
-    deps = ["//ortools/util:optional_boolean_proto"],
 )
 
 cc_proto_library(
     name = "linear_solver_cc_proto",
-    deps = [":linear_solver_proto"],
+    proto_deps = ["//ortools/util:optional_boolean_cc_proto"],
+    protos = [":linear_solver_proto"],
+)
+
+go_proto_library(
+    name = "linear_solver_go_proto",
+    proto_deps = ["//ortools/util:optional_boolean_go_proto"],
+    protos = [":linear_solver_proto"],
 )
 
 # You can include the interfaces to different solvers by invoking '--define'
